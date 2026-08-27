@@ -15,6 +15,27 @@ const path = require('path');
 const SCHEMAS_DIR = path.join(__dirname, '..', 'schemas');
 const OUTPUT_FILE = path.join(__dirname, '..', 'src', 'generated', 'types.ts');
 
+/**
+ * Collects all nested record definitions found in Avro schemas so we can
+ * generate separate TypeScript interfaces for them.
+ */
+function collectNestedRecords(field, collector) {
+  if (Array.isArray(field)) {
+    field.forEach(t => collectNestedRecords(t, collector));
+    return;
+  }
+  if (typeof field !== 'object' || field === null) return;
+
+  if (field.type === 'record' && !collector.has(field.name)) {
+    collector.set(field.name, field);
+    for (const f of field.fields || []) {
+      collectNestedRecords(f.type, collector);
+    }
+  }
+  if (field.type === 'array') collectNestedRecords(field.items, collector);
+  if (field.type === 'map') collectNestedRecords(field.values, collector);
+}
+
 function avroTypeToTs(field) {
   if (typeof field === 'string') {
     switch (field) {
@@ -59,24 +80,25 @@ function avroTypeToTs(field) {
   return 'unknown';
 }
 
-function generateRecordInterface(schema) {
+function generateRecordInterface(schema, indent) {
   const lines = [];
   const name = schema.name;
   const doc = schema.doc ? `/** ${schema.doc} */` : undefined;
+  const pad = indent || '  ';
 
-  if (doc) lines.push(`  ${doc}`);
-  lines.push(`  export interface ${name}Payload {`);
+  if (doc) lines.push(`${pad}${doc}`);
+  lines.push(`${pad}export interface ${name}${indent ? '' : 'Payload'} {`);
 
   for (const field of schema.fields || []) {
     const fieldType = avroTypeToTs(field.type);
     const optional = field.default !== undefined || (Array.isArray(field.type) && field.type.includes('null'));
     const fieldDoc = field.doc ? `/** ${field.doc} */` : undefined;
 
-    if (fieldDoc) lines.push(`    ${fieldDoc}`);
-    lines.push(`    ${field.name}${optional ? '?' : ''}: ${fieldType};`);
+    if (fieldDoc) lines.push(`${pad}  ${fieldDoc}`);
+    lines.push(`${pad}  ${field.name}${optional ? '?' : ''}: ${fieldType};`);
   }
 
-  lines.push('  }');
+  lines.push(`${pad}}`);
   return lines.join('\n');
 }
 
@@ -85,7 +107,6 @@ function generatePayloadMap(schemas) {
   return [
     '  export interface EventPayloadMap {',
     ...entries,
-    '    [eventType: string]: Record<string, unknown>;',
     '  }',
   ].join('\n');
 }
@@ -133,23 +154,45 @@ function main() {
     console.log(`  📄 Parsed ${file} → ${schema.name}Payload`);
   }
 
+  // Collect all nested record types across all schemas
+  const nestedRecords = new Map();
+  for (const schema of schemas) {
+    for (const field of schema.fields || []) {
+      collectNestedRecords(field.type, nestedRecords);
+    }
+  }
+
   // Generate output
-  const content = [
+  const parts = [
     '/**',
     ' * Сгенерированные типы из Avro-схем.',
     ' * Файл создан автоматически командой: npm run generate:schemas',
     ' * Не редактировать вручную.',
     ' */',
     '',
-    '// ============ Типы payload-ов событий ============',
-    '',
-    ...schemas.map(s => generateRecordInterface(s)),
-    '',
-    '// ============ Расширенная карта событий ============',
-    '',
-    generatePayloadMap(schemas),
-    '',
-  ].join('\n');
+  ];
+
+  if (nestedRecords.size > 0) {
+    parts.push('// ============ Вложенные типы ============');
+    parts.push('');
+    for (const [, rec] of nestedRecords) {
+      parts.push(generateRecordInterface(rec, '  '));
+      parts.push('');
+    }
+  }
+
+  parts.push('// ============ Типы payload-ов событий ============');
+  parts.push('');
+  for (const s of schemas) {
+    parts.push(generateRecordInterface(s));
+    parts.push('');
+  }
+  parts.push('// ============ Расширенная карта событий ============');
+  parts.push('');
+  parts.push(generatePayloadMap(schemas));
+  parts.push('');
+
+  const content = parts.join('\n');
 
   fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
   fs.writeFileSync(OUTPUT_FILE, content, 'utf-8');

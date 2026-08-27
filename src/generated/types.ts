@@ -4,6 +4,17 @@
  * Не редактировать вручную.
  */
 
+// ============ Вложенные типы ============
+
+  export interface OrderItem {
+    /** ID товара */
+    productId: string;
+    /** Количество */
+    quantity: number;
+    /** Цена за единицу */
+    price: number;
+  }
+
 // ============ Типы payload-ов событий ============
 
   /** Событие создания заказа */
@@ -17,6 +28,7 @@
     /** Товары в заказе */
     items: Array<OrderItem>;
   }
+
   /** Событие обработки платежа */
   export interface PaymentProcessedPayload {
     /** Идентификатор платежа */
@@ -38,5 +50,4 @@
   export interface EventPayloadMap {
     OrderCreated: OrderCreatedPayload;
     PaymentProcessed: PaymentProcessedPayload;
-    [eventType: string]: Record<string, unknown>;
   }
