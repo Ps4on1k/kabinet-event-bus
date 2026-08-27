@@ -1,0 +1,44 @@
+{
+  "type": "record",
+  "name": "PaymentProcessed",
+  "namespace": "events.kabinet",
+  "doc": "Событие обработки платежа",
+  "fields": [
+    {
+      "name": "paymentId",
+      "type": "string",
+      "doc": "Идентификатор платежа"
+    },
+    {
+      "name": "orderId",
+      "type": "string",
+      "doc": "Идентификатор заказа"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "PaymentStatus",
+        "symbols": ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]
+      },
+      "doc": "Статус платежа"
+    },
+    {
+      "name": "amount",
+      "type": "double",
+      "doc": "Сумма платежа"
+    },
+    {
+      "name": "currency",
+      "type": "string",
+      "default": "RUB",
+      "doc": "Валюта"
+    },
+    {
+      "name": "paidAt",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Дата оплаты (ISO 8601)"
+    }
+  ]
+}

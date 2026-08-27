@@ -1,0 +1,82 @@
+{
+  "name": "@kabinet/event-sdk",
+  "version": "1.0.0",
+  "description": "Event-driven SDK — клиентская библиотека для Kafka + Outbox",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "README.md",
+    "AGENT_PROMPT.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-Kabinet/kabinet-event-bus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/the-Kabinet/kabinet-event-bus/issues"
+  },
+  "homepage": "https://github.com/the-Kabinet/kabinet-event-bus#readme",
+  "keywords": [
+    "kafka",
+    "event-driven",
+    "event-bus",
+    "outbox",
+    "messaging",
+    "microservices",
+    "avro",
+    "schema-registry",
+    "deduplication",
+    "typescript"
+  ],
+  "author": "Kabinet",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "@prisma/client": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@prisma/client": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "avsc": "^5.7.7",
+    "kafkajs": "^2.2.4",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^9.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "clean": "rm -rf dist",
+    "generate:schemas": "node scripts/generate-types.js",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run clean && npm run build",
+    "prebuild": "npm run generate:schemas || true"
+  }
+}

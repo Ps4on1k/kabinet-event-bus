@@ -1,0 +1,52 @@
+{
+  "type": "record",
+  "name": "OrderCreated",
+  "namespace": "events.kabinet",
+  "doc": "Событие создания заказа",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": "string",
+      "doc": "Идентификатор заказа"
+    },
+    {
+      "name": "total",
+      "type": "double",
+      "doc": "Сумма заказа"
+    },
+    {
+      "name": "currency",
+      "type": "string",
+      "default": "RUB",
+      "doc": "Валюта заказа"
+    },
+    {
+      "name": "items",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "OrderItem",
+          "fields": [
+            {
+              "name": "productId",
+              "type": "string",
+              "doc": "ID товара"
+            },
+            {
+              "name": "quantity",
+              "type": "int",
+              "doc": "Количество"
+            },
+            {
+              "name": "price",
+              "type": "double",
+              "doc": "Цена за единицу"
+            }
+          ]
+        }
+      },
+      "doc": "Товары в заказе"
+    }
+  ]
+}

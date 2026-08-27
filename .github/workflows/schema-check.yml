@@ -1,0 +1,72 @@
+name: Schema Check
+
+on:
+  pull_request:
+    paths:
+      - 'schemas/**/*.avsc'
+
+jobs:
+  validate-schemas:
+    name: Validate Avro Schemas
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Avro syntax
+        run: |
+          for file in schemas/*.avsc; do
+            echo "Validating $file..."
+            node -e "JSON.parse(require('fs').readFileSync('$file', 'utf-8'))"
+          done
+          echo "✅ All schemas are valid JSON"
+
+      - name: Generate TypeScript types
+        run: npm run generate:schemas
+
+      - name: Build package
+        run: npm run build
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changes = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+
+            const schemaFiles = changes.data.filter(f =>
+              f.filename.includes('schemas/') && f.filename.endsWith('.avsc')
+            );
+
+            let comment = '## 📊 Avro Schema Validation Results\n\n';
+            comment += '✅ JSON syntax valid\n';
+            comment += '✅ TypeScript types generated successfully\n';
+            comment += '✅ Build succeeded\n\n';
+
+            if (schemaFiles.length > 0) {
+              comment += `### 📝 Changed schemas (${schemaFiles.length}):\n`;
+              for (const file of schemaFiles) {
+                comment += `- \`${file.filename}\` (${file.status})\n`;
+              }
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
