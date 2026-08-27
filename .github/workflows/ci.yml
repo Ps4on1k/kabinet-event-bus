@@ -54,3 +54,47 @@ jobs:
           path: |
             dist/
             schemas/
+
+  publish-rc:
+    name: Publish RC to GitHub Packages
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          registry-url: 'https://npm.pkg.github.com'
+          cache: 'npm'
+          scope: '@kabinet'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set RC version
+        id: version
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          RC_VERSION="${CURRENT_VERSION}-rc.${SHORT_SHA}.${GITHUB_RUN_NUMBER}"
+          echo "version=${RC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "📦 RC version: ${RC_VERSION}"
+
+      - name: Update package version to RC
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Build package
+        run: npm run build
+
+      - name: Publish RC to GitHub Packages
+        run: npm publish --tag rc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
