@@ -1,5 +1,5 @@
 {
-  "name": "@kabinet/event-sdk",
+  "name": "@ps4on1k/event-sdk",
   "version": "1.0.0",
   "description": "Event-driven SDK — клиентская библиотека для Kafka + Outbox",
   "main": "dist/index.js",
@@ -26,12 +26,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/the-Kabinet/kabinet-event-bus.git"
+    "url": "git+https://github.com/Ps4on1k/kabinet-event-bus.git"
   },
   "bugs": {
-    "url": "https://github.com/the-Kabinet/kabinet-event-bus/issues"
+    "url": "https://github.com/Ps4on1k/kabinet-event-bus/issues"
   },
-  "homepage": "https://github.com/the-Kabinet/kabinet-event-bus#readme",
+  "homepage": "https://github.com/Ps4on1k/kabinet-event-bus#readme",
   "keywords": [
     "kafka",
     "event-driven",

@@ -2,7 +2,7 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "@kabinet/event-sdk",
+      "package-name": "@ps4on1k/event-sdk",
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true
